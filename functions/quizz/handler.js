@@ -17,7 +17,7 @@ module.exports.webhook = (event, context, callback) => {
       return callback(null, parseInt(event.query['hub.challenge']));
 
     } else {
-      return callback('Invalid token');
+      return callback(new Error('[403] Invalid token'));
     }
   }
 
@@ -29,17 +29,20 @@ module.exports.webhook = (event, context, callback) => {
         // handle button action
         if (messagingItem.postback && messagingItem.postback.payload) {
           console.log(`handle ${messagingItem.postback.payload}`);
-          bot.handleAction(messagingItem.postback.payload, senderId, entry.time);
+          bot.handleAction(messagingItem.postback.payload, senderId, entry.time)
+            .catch((error) => callback(new Error(error)));
 
         // handle text message
         } else if (messagingItem.message) {
-          bot.notifyProcessing(senderId);
+          bot.notifyProcessing(senderId)
+            .catch((error) => callback(new Error(error)));
           const msg = messagingItem.message;
 
           // handle quick message
           if (msg.quick_reply && msg.quick_reply.payload) {
             console.log(`handle quick msg ${msg.quick_reply.payload}`);
-            bot.handleAction(msg.quick_reply.payload, senderId, entry.time);
+            bot.handleAction(msg.quick_reply.payload, senderId, entry.time)
+              .catch((error) => callback(new Error(error)));
 
           // handle any text message
           } else if (msg.text) {
@@ -48,7 +51,8 @@ module.exports.webhook = (event, context, callback) => {
             // handle play request
             if (textProcessor.isPlayCommand(text)) {
               console.log('handle play request');
-              bot.sendQuestion(senderId, entry.time);
+              bot.sendQuestion(senderId, entry.time)
+                .catch((error) => callback(new Error(error)));
 
             } else {
               questions.find({senderId: senderId}).sort({time: -1}).toArray(function(err, result) {
@@ -63,25 +67,28 @@ module.exports.webhook = (event, context, callback) => {
                    if (textProcessor.isHintCommand(text)) {
                      console.log('handle hint request');
                      bot.sendHint(senderId, expectedAnswer, personKey)
+                       .catch((error) => callback(new Error(error)));
 
                    } else if (!textProcessor.isName(text)) {
                      console.log('Unknown text');
                      bot.sendPuzzledApology(senderId)
-                       .then((response) => callback(null, {statusCode: 200, body: JSON.stringify({message: response.statusText})}));
+                       .catch((error) => callback(new Error(error)));
 
                    } else if (textProcessor.isRightAnswer(text, expectedAnswer)) {
                      console.log('Success');
-                     bot.sendResponseToAnswer(senderId, true, personKey);
-
+                     bot.sendResponseToAnswer(senderId, true, personKey)
+                       .catch((error) => callback(new Error(error)));
                    } else {
                      console.log('Failure');
-                     bot.sendResponseToAnswer(senderId, false, personKey);
+                     bot.sendResponseToAnswer(senderId, false, personKey)
+                       .catch((error) => callback(new Error(error)));
                    }
 
                  // handle message that is not recognized
                 } else {
                   console.log('could not handle message');
-                  bot.sendInitMessage(senderId);
+                  bot.sendInitMessage(senderId)
+                    .catch((error) => callback(new Error(error)));
                 }
               });
             }
@@ -89,6 +96,16 @@ module.exports.webhook = (event, context, callback) => {
         }
       });
     });
+  } else {
+    const response = {
+      statusCode: 400,
+      body: JSON.stringify({
+        message: 'Bad Request',
+        input: event,
+      }),
+    };
+
+    return callback(null, response);
   }
 
   // Use this code if you don't use the http event with the LAMBDA-PROXY integration

@@ -14,7 +14,7 @@ const db = mongojs(mongoUri);
 const questions = db.collection('questions');
 
 const notifyProcessing = function (senderId) {
-  axios.post(
+  return axios.post(
     pageUrl,
     {
       recipient: {
@@ -22,11 +22,11 @@ const notifyProcessing = function (senderId) {
       },
       sender_action: 'typing_on'
     }
-  ).then((response) => callback(null, response));
+  );
 };
 
 const sendMessage = function (senderId, messageObject) {
-  axios.post(
+  return axios.post(
     pageUrl,
     {
       recipient: {
@@ -34,7 +34,7 @@ const sendMessage = function (senderId, messageObject) {
       },
       message: messageObject
     }
-  ).then((response) => callback(null, response));
+  );
 };
 
 const saveQuestionToDb = function (senderId, answer, time) {
@@ -52,7 +52,7 @@ const saveQuestionToDb = function (senderId, answer, time) {
 const sendQuestion = function (senderId, time) {
   const randomPerson = photos[Math.floor(Math.random() * photos.length)];
   saveQuestionToDb(senderId, teamList[randomPerson], time);
-  sendMessage(
+  var promise = sendMessage(
     senderId,
     scrib.getImageMsg(randomPerson)
   );
@@ -66,11 +66,12 @@ const sendQuestion = function (senderId, time) {
       ]
     )
   );
+  return promise;
 };
 
 const sendAnswer = function (senderId, name) {
   const randomEmoji = emojis.happy[Math.floor(Math.random() * emojis.happy.length)];
-  sendMessage(
+  return sendMessage(
     senderId,
     scrib.getMsgWithButtons(
       `C'est ${name} ` + String.fromCodePoint(randomEmoji),
@@ -92,14 +93,14 @@ const sendResponseToAnswer = function (senderId, success, personKey) {
       scrib.getButton('La réponse', `ANSWER_${personKey}`)
     ];
   }
-  sendMessage(
+  return sendMessage(
     senderId,
     scrib.getMsgWithButtons(message, buttons)
   );
 };
 
 const sendHint = function (senderId, name, photo) {
-  sendMessage(
+  return sendMessage(
     senderId,
     scrib.getMsgWithButtons(
       `${name.substring(0,1)}...`,
@@ -119,7 +120,7 @@ const sendPuzzledApology = function(senderId) {
 };
 
 const sendHelpMessage = function(senderId) {
-  sendMessage(
+  return sendMessage(
     senderId,
     scrib.getMsgWithHelpers(
       'Apprends à connaître le nom des Theodoers; je te montre une photo et tu me donnes son prénom.',
@@ -129,7 +130,7 @@ const sendHelpMessage = function(senderId) {
 };
 
 const sendInitMessage = function(senderId) {
-  sendMessage(
+  return sendMessage(
     senderId,
     scrib.getMsgWithHelpers(
       'Que veux-tu faire ?',
@@ -146,24 +147,21 @@ const handleAction = function(action, senderId, time) {
   if (action.startsWith('ANSWER_')) {
     personKey = action.substring('ANSWER_'.length);
     if (teamList.hasOwnProperty(personKey)) {
-      sendAnswer(senderId, teamList[personKey]);
+      return sendAnswer(senderId, teamList[personKey]);
     }
   } else if (action.startsWith('HINT_')) {
     personKey = action.substring('HINT_'.length);
     if (teamList.hasOwnProperty(personKey)) {
-      sendHint(senderId, teamList[personKey], personKey);
+      return sendHint(senderId, teamList[personKey], personKey);
     }
   } else {
     switch (action) {
       case 'INIT_PLAY':
-        sendQuestion(senderId, time);
-        break;
+        return sendQuestion(senderId, time);
       case 'INIT_HELP':
-        sendHelpMessage(senderId);
-        break;
+        return sendHelpMessage(senderId);
       default:
-        sendInitMessage(senderId);
-        break;
+        return sendInitMessage(senderId);
     }
   }
 };
