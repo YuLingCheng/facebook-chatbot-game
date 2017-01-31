@@ -2,6 +2,7 @@
 const mongojs = require('mongojs');
 
 const bot = require('./lib/messenger.js');
+const textProcessor = require('./lib/textProcessor.js');
 
 const teamList = require('./resources/team.json');
 const photos = Object.keys(teamList);
@@ -42,14 +43,14 @@ module.exports.webhook = (event, context, callback) => {
 
           // handle any text message
           } else if (msg.text) {
+            var text = msg.text;
 
             // handle play request
-            if (['jouer', 'play', 'rejouer'].indexOf(msg.text.toLowerCase()) > -1) {
+            if (textProcessor.isPlayCommand(text)) {
               console.log('handle play request');
               bot.sendQuestion(senderId, entry.time);
 
             } else {
-              var answer = msg.text;
               questions.find({senderId: senderId}).sort({time: -1}).toArray(function(err, result) {
                 if (err) throw err;
 
@@ -59,11 +60,16 @@ module.exports.webhook = (event, context, callback) => {
                    var personKey = photos.find(key => teamList[key] === expectedAnswer);
 
                    // handle hint request
-                   if ('indice' === answer.toLowerCase()) {
+                   if (textProcessor.isHintCommand(text)) {
                      console.log('handle hint request');
                      bot.sendHint(senderId, expectedAnswer, personKey)
 
-                   } else if (expectedAnswer.toLowerCase() === answer.toLowerCase()) {
+                   } else if (!textProcessor.isName(text)) {
+                     console.log('Unknown text');
+                     bot.sendPuzzledApology(senderId)
+                       .then((response) => callback(null, {statusCode: 200, body: JSON.stringify({message: response.statusText})}));
+
+                   } else if (textProcessor.isRightAnswer(text, expectedAnswer)) {
                      console.log('Success');
                      bot.sendResponseToAnswer(senderId, true, personKey);
 

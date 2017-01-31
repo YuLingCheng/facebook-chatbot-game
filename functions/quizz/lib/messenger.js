@@ -108,11 +108,21 @@ const sendHint = function (senderId, name, photo) {
   );
 };
 
+const sendPuzzledApology = function(senderId) {
+  return sendMessage(
+    senderId,
+    scrib.getMsgWithHelpers(
+      'Hum, j\'ai peur de ne pas comprendre',
+      [scrib.getQuickReply('À l\'aide !', 'INIT_HELP')]
+    )
+  );
+};
+
 const sendHelpMessage = function(senderId) {
   sendMessage(
     senderId,
     scrib.getMsgWithHelpers(
-      'Apprends à connaître le nom des Theodoers; une photo te sera proposée et tu devras trouver son prénom.',
+      'Apprends à connaître le nom des Theodoers; je te montre une photo et tu me donnes son prénom.',
       [scrib.getQuickReply('J\'ai compris', 'INIT_PLAY')]
     )
   );
@@ -161,6 +171,7 @@ const handleAction = function(action, senderId, time) {
 module.exports = {
   handleAction: handleAction,
   notifyProcessing: notifyProcessing,
+  sendPuzzledApology: sendPuzzledApology,
   sendHint: sendHint,
   sendInitMessage: sendInitMessage,
   sendQuestion: sendQuestion,
