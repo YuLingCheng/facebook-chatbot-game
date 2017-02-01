@@ -10,8 +10,6 @@ const photos = Object.keys(teamList);
 const pageUrl = `https://graph.facebook.com/v2.6/me/messages?access_token=${process.env.FB_PAGE_ACCESS_TOKEN}`;
 
 const mongoUri = 'mongodb://yuling:yuling-bot@ds141328.mlab.com:41328/chatbot';
-const db = mongojs(mongoUri);
-const questions = db.collection('questions');
 
 const notifyProcessing = function (senderId) {
   return axios.post(
@@ -43,10 +41,13 @@ const saveQuestionToDb = function (senderId, answer, time) {
     answer: answer,
     time: time
   };
+  const db = mongojs(mongoUri);
+  const questions = db.collection('questions');
   questions.insert(question, function(err, result) {
     if (err) throw err;
     console.log(`insert question senderId: ${senderId}, answer: ${answer}, time: ${time}`);
   });
+  db.close();
 };
 
 const sendQuestion = function (senderId, time) {

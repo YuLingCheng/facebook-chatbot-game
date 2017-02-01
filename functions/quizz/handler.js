@@ -7,9 +7,6 @@ const textProcessor = require('./lib/textProcessor.js');
 const teamList = require('./resources/team.json');
 const photos = Object.keys(teamList);
 
-const db = mongojs(process.env.MONGO_URI);
-const questions = db.collection('questions');
-
 module.exports.webhook = (event, context, callback) => {
   if (event.method === 'GET') {
     // facebook app verification
@@ -55,6 +52,8 @@ module.exports.webhook = (event, context, callback) => {
                 .catch((error) => callback(new Error(error)));
 
             } else {
+              const db = mongojs(process.env.MONGO_URI);
+              const questions = db.collection('questions');
               questions.find({senderId: senderId}).sort({time: -1}).toArray(function(err, result) {
                 if (err) throw err;
 
@@ -91,6 +90,7 @@ module.exports.webhook = (event, context, callback) => {
                     .catch((error) => callback(new Error(error)));
                 }
               });
+              db.close();
             }
           }
         }
