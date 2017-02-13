@@ -77,19 +77,24 @@ Before staring the tutorial, make sure you have :
    
 * __Node v4 or higher to install Serverless__ ~1min
 
- * `npm install -g serverless` will do the job
+ `npm install -g serverless` will do the job
 
 * __The API Key & Secret of an IAM user with programmatic access and AdministratorAccess__ ~2min
 
-  * The paragraph [Creating AWS Access Keys in the Serverless doc](https://serverless.com/framework/docs/providers/aws/guide/credentials#creating-aws-access-keys) is faily explicit for that.
+  The paragraph [Creating AWS Access Keys in the Serverless doc](https://serverless.com/framework/docs/providers/aws/guide/credentials#creating-aws-access-keys) is faily explicit for that.
  
 * __Configured Serverless with your AWS credentials__ ~1min
 
- * I recommand using the [serverless config credentials command](https://serverless.com/framework/docs/providers/aws/guide/credentials#setup-with-serverless-config-credentials-command).
+ I recommand using the [serverless config credentials command](https://serverless.com/framework/docs/providers/aws/guide/credentials#setup-with-serverless-config-credentials-command).
   You'll avoid having to install aws-cli or managing environment variables
   
 * For the chatbot, __a Facebook Developper account__ ~1min
- * 3min if you don't have a [Facebook account](https://www.facebook.com/login/?next=https%3A%2F%2Fdevelopers.facebook.com%2F) yet
+
+ 3min if you don't have a [Facebook account](https://www.facebook.com/login/?next=https%3A%2F%2Fdevelopers.facebook.com%2F) yet
+ 
+* For the chatbot, __a Facebook Page that you own__ ~2min
+
+ Use the same account as your Facebook Developper account [to create your page](https://www.facebook.com/pages/create/?ref_type=pages_browser) 
 
 ### Tutorial
 
@@ -206,7 +211,15 @@ module.exports.webhook = (event, context, callback) => {
       return callback(null, parseInt(event.query['hub.challenge']));
 
     } else {
-      return callback(new Error('[403] Invalid token'));
+      const response = {
+        statusCode: 403,
+        body: JSON.stringify({
+          message: 'Invalid Token',
+          input: event,
+        }),
+      };
+
+      return callback(null, response);
     }
   } else {
     const response = {
@@ -219,5 +232,88 @@ module.exports.webhook = (event, context, callback) => {
 
     return callback(null, response);
   }
+ };
+ ```
+
+ * Don't forget to rename your exported lambda function `webhook` !
+ * Make sure to choose a strong `SECRET_TOKEN_YOU_NEED_TO_CHANGE_AND_PROTECT`.
+ 
+  It is the token that you will have to declare to your Messenger app to enable communication with the chat.
+ * The `hub.challenge` is an integer code that Messenger sends you along with the token.
+ * Test your handler locally :
+ 
+ ```shell
+  $ sls invoke local -f hello -p -d "{\"method\":\"GET\",\"query\":{\"hub.verify_token\":\"SECRET_TOKEN_YOU_NEED_TO_CHANGE_AND_PROTECT\",\"hub.challenge\":123456}}"
+123456
+  $ sls invoke local -f hello -p -d "{\"method\":\"GET\",\"query\":{\"hub.verify_token\":\"BAD_TOKEN\",\"hub.challenge\":123456}}"
+{
+    "statusCode": 403,
+    "body": "{\"message\":\"Invalid Token\",\"input\":{\"method\":\"GET\",\"query\":{\"hub.verify_token\":\"BAD_TOKEN\",\"hub.challenge\":123456}}}"
+}
+ ```
   
-  ```
+  I recommend you create `.yml` or `.json` files to invoke your lambda function locally.
+  It will make your life easier :)
+  
+Now that you'll be able to receive events from Messenger, let's update your lambda function to actually handle them.
+  
+Add HTTP POST config to your `serverless.yml` :
+```yml
+functions:
+  webhook:
+    handler: handler.webhook
+    events:
+      - http: 
+          path: webook
+          method: GET
+          integration: lambda
+      - http: 
+          path: webook
+          method: POST
+          integration: lambda
+```
+
+To handle the POST requests we will need some more preparation :
+
+* Create a Facebook Page that will be our chatbot identity
+
+
+* Get a page token to be able to post messages on behalf of your page (and have your chatbot respond automatically)
+
+* Add axios to your project to be able to send responses from your bot.
+
+Now you can edit your `handler.js` :
+
+```node.js
+module.exports.webhook = (event, context, callback) => {
+  if (event.method === 'GET') {
+    // facebook app verification
+    if (event.query['hub.verify_token'] === 'SECRET_TOKEN_YOU_NEED_TO_CHANGE_AND_PROTECT' && event.query['hub.challenge']) {
+      return callback(null, parseInt(event.query['hub.challenge']));
+
+    } else {
+      const response = {
+        statusCode: 403,
+        body: JSON.stringify({
+          message: 'Invalid Token',
+          input: event,
+        }),
+      };
+
+      return callback(null, response);
+    }
+  } else {
+    const response = {
+      statusCode: 400,
+      body: JSON.stringify({
+        message: 'Bad Request',
+        input: event,
+      }),
+    };
+
+    return callback(null, response);
+  }
+ };
+ ```
+  
+ Time to deploy for the first time !
