@@ -6,7 +6,7 @@ like going out in the cold, being sweaty and feeling stiff afterwards, and decid
 I have the same mixed feelings when I get an idea of project and then get discouraged -even before getting started-
 thinking about having to provision a server and deploy my code to see it live and used by others than myself.
 
-But recently, I discovered Serverless, a framework that helps you deploy your code in seconds.
+But recently, I discovered [__Serverless__](https://serverless.com/), a framework that helps you deploy your code in seconds.
 It is based on [Amazon Lambda](http://docs.aws.amazon.com/Lambda/latest/dg/welcome.html).
 
 The framework is said to relieve Lambda functions of its main pain points (the AWS console, the heavy configuration), to allow developers to work with more familiar standards.
@@ -40,7 +40,7 @@ Lambda functions are handy when
 
   Ex: create thumbnails for profile pictures uploaded to your website
 
-  Funnier: a backend for a chatbot
+  __Funnier__: a backend for a chatbot
 
     Building a chatbot is a great mean to test an idea and develop an MVP.
 
@@ -104,7 +104,7 @@ This creates two files in the directory `my-first-chatbot`:
 │   └── serverless.yml
 ```
 
-I used Node.js for my bot. If you prefer Python, use `aws-python` instead.
+_I used Node.js for my bot. If you prefer Python, use `aws-python` instead._
 
 First take a look at the `serverless.yml` file.
 It is the configuration file of your project.
@@ -256,8 +256,8 @@ module.exports.webhook = (event, context, callback) => {
 }
  ```
 
-  I recommend you create `.yml` or `.json` files to invoke your Lambda function locally.
-  It will make your life easier :)
+  _I recommend you create `.yml` or `.json` files to invoke your Lambda function locally.
+  It will make your life easier :)_
 
 Now that you'll be able to receive events from Messenger, let's update your Lambda function to actually handle them.
 
@@ -287,12 +287,12 @@ To handle the POST requests we will need some more preparation:
  For that,
   * [Create an app from your Facebook developer account](https://developers.facebook.com/apps/)
   * Add the Messenger product to your app
-   You can access all Facebook products from the left menu "Add a product".
+   You can access all Facebook products from the left menu __"Add a product"__.
 
 * Get a page token to be able to post messages on behalf of your page (and have your chatbot respond automatically)
 
  Once you have added Messenger to your app, configure Messenger parameters (accessible from left menu also):
-  * Under "Token Generation", select your Facebook Page
+  * Under __"Token Generation"__, select your Facebook Page
   * Grant access to it with your Facebook account
   * Save the token you get for later.
 
@@ -463,12 +463,12 @@ What you can do now:
 
 Final settings for your Messenger app:
 
- * Configure Messenger parameters to "Setup Webhooks" under "Webhooks" now that your endpoint is available.
+ * Configure Messenger parameters to __"Setup Webhooks"__ under __"Webhooks"__ now that your endpoint is available.
 
- * Use the endpoint url as "Callback URL", and your `SECRET_TOKEN_YOU_NEED_TO_CHANGE_AND_PROTECT`.
+ * Use the endpoint url as __"Callback URL"__, and your `SECRET_TOKEN_YOU_NEED_TO_CHANGE_AND_PROTECT`.
  * Subscribe to `messages` and other Messenger events you might want to handle.
- * "Verify and Save": Facebook will call the GET endpoint with the token your gave him to subscribe your webhook to the the app
- * Once done, in the same "Webhook" section, select your Facebook page for subscription: you'll now listen to the events incoming from this page
+ * __"Verify and Save"__: Facebook will call the GET endpoint with the token your gave him to subscribe your webhook to the the app
+ * Once done, in the same __"Webhook"__ section, select your Facebook page for subscription: you'll now listen to the events incoming from this page
 
 Now for the chatbot to send you automatic messages, you need to start the conversation first (otherwise you'll get a 403)
 
@@ -480,7 +480,7 @@ Now for the chatbot to send you automatic messages, you need to start the conver
 
   Go to the Facebook page and start a conversation from there)
 
-That's it for now !
+__That's it for now !__
 
 I'll be happy to have your opinion or feedback if you tried using Serverless or AWS Lambda, or if you have any question or suggestion about this tutorial.
-Feel free to leave a comment:)
+Feel free to leave a comment :)
