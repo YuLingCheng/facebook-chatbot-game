@@ -94,7 +94,9 @@ Before staring the tutorial, make sure you have :
  
 * For the chatbot, __a Facebook Page that you own__ ~2min
 
- Use the same account as your Facebook Developper account [to create your page](https://www.facebook.com/pages/create/?ref_type=pages_browser) 
+ Use the same account as your Facebook Developper account [to create your page](https://www.facebook.com/pages/create/?ref_type=pages_browser)
+ 
+ The Page gives an identoty to your chatbot, you can't have one without it.
 
 ### Tutorial
 
@@ -275,45 +277,103 @@ functions:
 
 To handle the POST requests we will need some more preparation :
 
-* Create a Facebook Page that will be our chatbot identity
+* Create your Messenger app
 
+ For that,
+  * [create an app from your Facebook developer account](https://developers.facebook.com/apps/)
+  * Add the Messenger product to your app
+   You can access all Facebook products from the left menu "Add a product".
 
 * Get a page token to be able to post messages on behalf of your page (and have your chatbot respond automatically)
-
+ 
+ Once you have added Messenger to your app, configure Messenger parameters (accessible from left menu also) :
+  * Under "Token Generation", select your Facebook Page
+  * Grant access to it with your Facebook account
+  * Save the token you get for later.
+ 
 * Add axios to your project to be able to send responses from your bot.
-
+ *  ??? package.json needed ??? Create a package.json file for your project (`npm init`)
+ * Install axios `npm install axios --save`
+ 
 Now you can edit your `handler.js` :
 
 ```node.js
+const axios = require('axios');
+const fbPageToken = 'YOUR_FACEBOOK_PAGE_TOKEN';
+const fbPageUrl = `https://graph.facebook.com/v2.6/me/messages?access_token=${fbPageToken}`;
+
 module.exports.webhook = (event, context, callback) => {
   if (event.method === 'GET') {
-    // facebook app verification
-    if (event.query['hub.verify_token'] === 'SECRET_TOKEN_YOU_NEED_TO_CHANGE_AND_PROTECT' && event.query['hub.challenge']) {
-      return callback(null, parseInt(event.query['hub.challenge']));
+    // handle GET method
+  } else if (event.method === 'POST') {
+      event.body.entry.map((entry) => {
+        // Messenger can send several entry for one event.
+        // The list contains all the information on the event.
+        entry.messaging.map((messagingItem) => {
+          // Each entry can have several messaging data within each event.
+          // For instance if a user sends several messages at the same time.
+          // messagingItem contains :
+          //  - the sender information,
+          //  - the recipient information,
+          //  - the message information,
+          //  - other specific information
+          const senderId = messagingItem.sender.id;
 
-    } else {
-      const response = {
-        statusCode: 403,
-        body: JSON.stringify({
-          message: 'Invalid Token',
-          input: event,
-        }),
-      };
-
-      return callback(null, response);
-    }
+          // handle text message
+          if (messagingItem.message && messagingItem.message.text) {
+          const payload = {
+            recipient: {
+              id: senderId
+            },
+            message: {
+              text: `You say "${messagingItem.message.text}", I say : Hi, let's chat :)`
+            }
+          };
+          axios
+            .post(fbPageUrl, payload)
+            .then((response) => {
+              response = {
+                statusCode: response.status,
+                body: JSON.stringify({
+                  message: response.statusText,
+                  input: event,
+                }),
+              };
+              return callback(null, response);
+            })
+            .catch((error) => {
+              const response = {
+                statusCode: error.response.status,
+                body: JSON.stringify({
+                  message: error.response.statusText,
+                  input: event,
+                }),
+              };
+              return callback(null, response);
+            });
+        }
+      });
+    });
   } else {
-    const response = {
-      statusCode: 400,
-      body: JSON.stringify({
-        message: 'Bad Request',
-        input: event,
-      }),
-    };
-
-    return callback(null, response);
+    // Handle bad requests
   }
  };
  ```
-  
- Time to deploy for the first time !
+ 
+ You can try to call your lambda locally, but you won't be able to get a successful response unless you know a real sender ID.
+ 
+ ```shell
+ $ sls invoke local -f hello -d "{\"method\":\"POST\",\"body\":{\"entry\":[{\"messaging\":[{\"sender\":{\"id\":\"YOUR_SENDER_ID\"},\"message\":{\"text\":\"Hello\"}}]}]}}"
+{
+    "statusCode": 400,
+    "body": "{\"message\":\"Bad Request\",\"input\":{\"method\":\"POST\",\"body\":{\"entry\":[{\"messaging\":[{\"sender\":{\"id\":\"YOUR_SENDER_ID\"},\"message\":{\"text\":\"Hello\"}}]}]}}}"
+}
+ ```
+  
+ This means it is time to deploy your project for the first time !
+
+As easy as :
+```shell
+$ sls deploy
+```
+    
