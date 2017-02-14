@@ -479,7 +479,7 @@ Now for the chatbot to send you automatic messages, you need to start the conver
 * If not
 
   Go to the Facebook page and start a conversation from there
-  
+
 __Your app is now in prod!__
 
 You can start iterating. Facebook allows you to grant permission to testers to use your app before it is validated and available by anyone.
@@ -493,13 +493,16 @@ I rated Serverless, EC2 and Heroku based on three criteria:
       | Serverless | EC2 | Heroku
 ----- | ---------- | --- | -------
 Scalability | ++ | + | -
-Customuzation and services | + | ++ | -
+Customization and services | + | ++ | -
 Ease of use | ok | ok | +
 
-On Heroku, you need to configure manually the scale of your infrastructure.
-You have less integrations than on AWS, but it is more user friendly than AWS EC2, and you have less new concepts to understand than Serverless.
+On Heroku,
+* You need to configure manually the scale of your infrastructure.
+* You have less integrations than on AWS
+* But it is more user friendly than AWS EC2
+* You have less new concepts to understand than Serverless.
 
-On the other hand, once you get your hand with Serverless or EC2s, you can implement your service faster and more easily. 
+On the other hand, once you get your hand with Serverless or EC2s, you can implement your service faster and more easily.
 
 ### Pricing
 I'll consider two scenarios:
@@ -508,7 +511,7 @@ I'll consider two scenarios:
 2. A data processing job running every day every hour
 
  a. Requiring less than 500MB RAM
- 
+
  b. Requiring more than 500MB RAM
 
       | Serverless | EC2 | Heroku
@@ -517,15 +520,18 @@ I'll consider two scenarios:
 2.a | 0.67€/month | 4€/month | 7€/month
 2.b | 1.35€/month | 8€/month | 25€/month
 
-Heroku is still a good plan in case 1., but if you need a cron job every hour or if you need lots of computing memory, AWS is a better bargain, Serverless being the cheapest.
+* Heroku is still a good plan in case 1.
+* AWS is a better bargain if:
+  * You need a cron job every hour
+  * You need lots of computing memory
+* Serverless is cheaper than EC2.
 
 __That's it for now !__
 
 I'll be happy to have your opinion or feedback if you tried using Serverless or AWS Lambda, or if you have any question or suggestion about this tutorial.
 Feel free to leave a comment :)
 
-__Sources__
-Benchmark:
+_Sources for the benchmark_
 * [AWS Lambda Pricing in Context - A Comparison to EC2](https://www.trek10.com/blog/lambda-cost/)
 * [AWS Lambda Pricing Calculator](https://s3.amazonaws.com/lambda-tools/pricing-calculator.html) and [AWS Simple Monthly Calculator](http://calculator.s3.amazonaws.com/index.html)
 * [Heroku Pricing Page](https://www.heroku.com/pricing)
