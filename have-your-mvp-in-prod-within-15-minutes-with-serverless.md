@@ -478,12 +478,11 @@ Now for the chatbot to send you automatic messages, you need to start the conver
 
 * If not
 
-  Go to the Facebook page and start a conversation from there)
+  Go to the Facebook page and start a conversation from there
+  
+__Your app is now in prod!__
 
-__That's it for now !__
-
-I'll be happy to have your opinion or feedback if you tried using Serverless or AWS Lambda, or if you have any question or suggestion about this tutorial.
-Feel free to leave a comment :)
+You can start iterating. Facebook allows you to grant permission to testers to use your app before it is validated and available by anyone.
 
 ## Benchmarking MVP options
 
@@ -498,14 +497,19 @@ Customuzation and services | + | ++ | -
 Ease of use | ok | ok | +
 
 On Heroku, you need to configure manually the scale of your infrastructure.
-You have less integrations than on AWS, but it is much more user friendly as it has 
+You have less integrations than on AWS, but it is more user friendly than AWS EC2, and you have less new concepts to understand than Serverless.
+
+On the other hand, once you get your hand with Serverless or EC2s, you can implement your service faster and more easily. 
 
 ### Pricing
 I'll consider two scenarios:
+
 1. The custom IFFT: low traffic and light computing memory
 2. A data processing job running every day every hour
- * Requiring less than 500MB RAM
- * Requiring more than 500MB RAM
+
+ a. Requiring less than 500MB RAM
+ 
+ b. Requiring more than 500MB RAM
 
       | Serverless | EC2 | Heroku
 ----- | ---------- | --- | -------
@@ -515,7 +519,13 @@ I'll consider two scenarios:
 
 Heroku is still a good plan in case 1., but if you need a cron job every hour or if you need lots of computing memory, AWS is a better bargain, Serverless being the cheapest.
 
-Sources I used for my comparison:
+__That's it for now !__
+
+I'll be happy to have your opinion or feedback if you tried using Serverless or AWS Lambda, or if you have any question or suggestion about this tutorial.
+Feel free to leave a comment :)
+
+__Sources__
+Benchmark:
 * [AWS Lambda Pricing in Context - A Comparison to EC2](https://www.trek10.com/blog/lambda-cost/)
 * [AWS Lambda Pricing Calculator](https://s3.amazonaws.com/lambda-tools/pricing-calculator.html) and [AWS Simple Monthly Calculator](http://calculator.s3.amazonaws.com/index.html)
 * [Heroku Pricing Page](https://www.heroku.com/pricing)
