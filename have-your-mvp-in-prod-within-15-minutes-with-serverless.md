@@ -34,7 +34,7 @@ I'll alswo share with you my conclusions on when to use Serverless rather than a
 I'll be happy to have your opinion or feedback if you tried using Serverless or AWS Lambda, or if you have any question or suggestion about my tutorial.
 Feel free to leave a comment :)
 
-## What cool projects can you do with Serverless ?
+## What cool projects can you do with Serverless?
 
 I don't have enough overview to talk about running big projets on AWS lambda, but I understand that lamdba functions are handy when you want to have a cron job running without having a full server dedicated to it.
 Or if you want to have automatic data processing jobs.
@@ -105,7 +105,7 @@ Before staring the tutorial, make sure you have :
 ```shell
 $ sls create --template aws-nodejs --path my-first-chatbot
 ```
-This creates two files in the directory `my-first-chatbot` :
+This creates two files in the directory `my-first-chatbot`:
 ```
 ├── my-first-chatbot
 │   ├── handler.js
@@ -113,7 +113,7 @@ This creates two files in the directory `my-first-chatbot` :
 ```
 First take a look at the `serverless.yml` file.
 It is the configuration file of your project.
-Lots of options are commented in the file, all you need for now is the following :
+Lots of options are commented in the file, all you need for now is the following:
 
 ```yml
 service: my-first-chatbot
@@ -131,7 +131,7 @@ functions:
 ```
 
 So far you have declared the `hello` lambda function written in Node.js which will be deployed somewhere in the Frankfort AWS cloud.
-You can already invoke it locally from your shell to check that it works :
+You can already invoke it locally from your shell to check that it works:
 ```shell
 $ sls invoke local -f hello
 {
@@ -182,15 +182,15 @@ module.exports.hello = (event, context, callback) => {
   
 #### Set up the webhook to communicate with your Facebook chat
  
-You need a webhook (aka web callback or HTTP push API) to first exchange credentials with your Messenger app so that you can start receiving events from it (incomming messages, postback ...).
+You need a webhook (aka web callback or HTTP push API) to first exchange credentials with your Messenger app so that you can start receiving events from it (incomming messages, postback ...), and responding to them.
 
-This is done through an HTTP GET event set for your lamdba function.
+Credentials exchange is done through an HTTP GET event set for your lamdba function.
 
-The HTTP GET event needs requires an endpoint.
+The HTTP GET event requires an endpoint.
 
 Luckily, serverless allows you to create one simply by writing a few lines of configuration.
 
-Rename your `hello` function to `webhook` and add the following config to your `serverless.yml` :
+Rename your `hello` function to `webhook` and add the following config to your `serverless.yml`:
 ```yml
 ...
 
@@ -206,7 +206,7 @@ functions:
                               # The `lambda` method here works well with Messenger's events 
 ```
 
-Then update your `handler.js` file to enable authorisation :
+Then update your `handler.js` file to enable authorisation:
 ```node.js
 module.exports.webhook = (event, context, callback) => {
   if (event.method === 'GET') {
@@ -239,17 +239,17 @@ module.exports.webhook = (event, context, callback) => {
  };
  ```
 
- * Don't forget to rename your exported lambda function `webhook` !
+ * Don't forget to rename your exported lambda function `webhook`!
  * Make sure to choose a strong `SECRET_TOKEN_YOU_NEED_TO_CHANGE_AND_PROTECT`.
  
   It is the token that you will have to declare to your Messenger app to enable communication with the chat.
  * The `hub.challenge` is an integer code that Messenger sends you along with the token.
- * Test your handler locally :
+ * Test your handler locally:
  
  ```shell
-  $ sls invoke local -f hello -p -d "{\"method\":\"GET\",\"query\":{\"hub.verify_token\":\"SECRET_TOKEN_YOU_NEED_TO_CHANGE_AND_PROTECT\",\"hub.challenge\":123456}}"
+  $ sls invoke local -f webhook -p -d "{\"method\":\"GET\",\"query\":{\"hub.verify_token\":\"SECRET_TOKEN_YOU_NEED_TO_CHANGE_AND_PROTECT\",\"hub.challenge\":123456}}"
 123456
-  $ sls invoke local -f hello -p -d "{\"method\":\"GET\",\"query\":{\"hub.verify_token\":\"BAD_TOKEN\",\"hub.challenge\":123456}}"
+  $ sls invoke local -f webhook -p -d "{\"method\":\"GET\",\"query\":{\"hub.verify_token\":\"BAD_TOKEN\",\"hub.challenge\":123456}}"
 {
     "statusCode": 403,
     "body": "{\"message\":\"Invalid Token\",\"input\":{\"method\":\"GET\",\"query\":{\"hub.verify_token\":\"BAD_TOKEN\",\"hub.challenge\":123456}}}"
@@ -261,7 +261,7 @@ module.exports.webhook = (event, context, callback) => {
   
 Now that you'll be able to receive events from Messenger, let's update your lambda function to actually handle them.
   
-Add HTTP POST config to your `serverless.yml` :
+Add HTTP POST config to your `serverless.yml`:
 ```yml
 ...
 
@@ -279,7 +279,7 @@ functions:
           integration: lambda
 ```
 
-To handle the POST requests we will need some more preparation :
+To handle the POST requests we will need some more preparation:
 
 * Create your Messenger app
 
@@ -296,10 +296,22 @@ To handle the POST requests we will need some more preparation :
   * Save the token you get for later.
  
 * Add axios to your project to be able to send responses from your bot.
- *  ??? package.json needed ??? Create a package.json file for your project (`npm init`)
- * Install axios `npm install axios --save`
+
+ ```shell
+ $ npm install axios
+ ```
  
-Now you can edit your `handler.js` :
+ Use a `package.json` file if you want to manage your `node_modules`
+ 
+ ```
+ ├── my-first-chatbot
+ │   ├── node_modules
+ │   ├── handler.js
+ │   └── serverless.yml
+ ```
+ 
+ 
+Now you can edit your `handler.js`:
 
 ```node.js
 const axios = require('axios');
@@ -309,7 +321,7 @@ const fbPageUrl = `https://graph.facebook.com/v2.6/me/messages?access_token=${fb
 module.exports.webhook = (event, context, callback) => {
   if (event.method === 'GET') {
     // ...
-  } else if (event.method === 'POST') {
+  } else if (event.method === 'POST' && event.body.entry) {
       event.body.entry.map((entry) => {
         // Messenger can send several entry for one event.
         // The list contains all the information on the event.
@@ -367,17 +379,75 @@ module.exports.webhook = (event, context, callback) => {
  You can try to call your lambda locally, but you won't be able to get a successful response unless you know a real sender ID.
  
  ```shell
- $ sls invoke local -f hello -d "{\"method\":\"POST\",\"body\":{\"entry\":[{\"messaging\":[{\"sender\":{\"id\":\"YOUR_SENDER_ID\"},\"message\":{\"text\":\"Hello\"}}]}]}}"
+ $ sls invoke local -f webhook -d "{\"method\":\"POST\",\"body\":{\"entry\":[{\"messaging\":[{\"sender\":{\"id\":\"YOUR_SENDER_ID\"},\"message\":{\"text\":\"Hello\"}}]}]}}"
 {
     "statusCode": 400,
     "body": "{\"message\":\"Bad Request\",\"input\":{\"method\":\"POST\",\"body\":{\"entry\":[{\"messaging\":[{\"sender\":{\"id\":\"YOUR_SENDER_ID\"},\"message\":{\"text\":\"Hello\"}}]}]}}}"
 }
  ```
   
- This means it is time to deploy your project for the first time !
+ This means it is time to deploy your project for the first time!
 
 As easy as :
+
 ```shell
 $ sls deploy
 ```
-    
+You'll see the following logs appear:
+
+```shell
+Serverless: Packaging service...
+Serverless: Uploading CloudFormation file to S3...
+Serverless: Uploading service .zip file to S3 (134.73 KB)...
+Serverless: Updating Stack...
+Serverless: Checking Stack update progress...
+.................................
+Serverless: Stack update finished...
+Service Information
+service: my-first-chatbot
+stage: dev
+region: eu-central-1
+api keys:
+  None
+endpoints:
+  GET - https://xg8r9awbh1.execute-api.eu-central-1.amazonaws.com/dev/webook
+  POST - https://xg8r9awbh1.execute-api.eu-central-1.amazonaws.com/dev/webook
+functions:
+  my-first-chatbot-dev-webhook: arn:aws:lambda:eu-central-1:918030227213:function:my-first-chatbot-dev-webhook
+```
+
+Congratulations, your webhook is now available from anywhere!
+
+What happened exacly?
+
+Notice that you have a new folder in your project directory:
+ ```
+ ├── my-first-chatbot
+ │   ├── .serverless
+ │   │   ├── cloudformation-template-create-stack.json
+ │   │   ├── cloudformation-template-update-stack.json
+ │   │   └── my-first-chatbot.zip
+ │   ├── node_modules
+ │   ├── handler.js
+ │   └── serverless.yml
+ ```
+
+Let's examine the first half of the logs to understand:
+* Serverless reads your `serverless.yml` file to create two CloudFormation files in the directory `.serverless` :
+ - one to create a [CloudFormation on AWS](https://aws.amazon.com/cloudformation/?nc1=h_ls) through your AWS account
+ - one to create all the AWS resources you need to have your Lambda function working
+  (Here it includes the two API Gateway endpoints you need for your webhook and other credentials settings)
+* Serverless packaged all the files in your directory except the `serverless.yml` file, zip it to `.serverless/my-first-chatbot.zip`
+* Serverless then uploads the new files created to an S3 Bucket in the region specified in your `serverless.yml` and creates or update all the resources listed in the CloudFormation update file (including the Lambda function of course)
+
+What you can do now:
+* Invoke your deployed Lambda function
+ ```shell
+  $ sls invoke -f webhook -p -d "{\"method\":\"GET\",\"query\":{\"hub.verify_token\":\"SECRET_TOKEN_YOU_NEED_TO_CHANGE_AND_PROTECT\",\"hub.challenge\":123456}}"
+  $ sls invoke -f webhook -p -d "{\"method\":\"GET\",\"query\":{\"hub.verify_token\":\"BAD_TOKEN\",\"hub.challenge\":123456}}"
+  $ sls invoke -f webhook -d "{\"method\":\"POST\",\"body\":{\"entry\":[{\"messaging\":[{\"sender\":{\"id\":\"YOUR_SENDER_ID\"},\"message\":{\"text\":\"Hello\"}}]}]}}"
+ ```
+ * Test that your lamdba function is triggered when there is a call to one of the endpoints that just have been created
+  ```shell
+  $ curl -X GET ""
+ ```
