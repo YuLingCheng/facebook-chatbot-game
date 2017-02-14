@@ -192,6 +192,8 @@ Luckily, serverless allows you to create one simply by writing a few lines of co
 
 Rename your `hello` function to `webhook` and add the following config to your `serverless.yml` :
 ```yml
+...
+
 functions:
   webhook:
     handler: handler.webhook
@@ -261,6 +263,8 @@ Now that you'll be able to receive events from Messenger, let's update your lamb
   
 Add HTTP POST config to your `serverless.yml` :
 ```yml
+...
+
 functions:
   webhook:
     handler: handler.webhook
@@ -304,7 +308,7 @@ const fbPageUrl = `https://graph.facebook.com/v2.6/me/messages?access_token=${fb
 
 module.exports.webhook = (event, context, callback) => {
   if (event.method === 'GET') {
-    // handle GET method
+    // ...
   } else if (event.method === 'POST') {
       event.body.entry.map((entry) => {
         // Messenger can send several entry for one event.
@@ -355,7 +359,7 @@ module.exports.webhook = (event, context, callback) => {
       });
     });
   } else {
-    // Handle bad requests
+    // ...
   }
  };
  ```
