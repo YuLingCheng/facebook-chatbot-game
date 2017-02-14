@@ -35,7 +35,7 @@ In this article, you'll find:
 Lambda functions are handy when
 * You want to have a cron job running without having a full server dedicated to it.
 
-  Ex: a custom IFTTT or Zapier
+  Ex: a custom [IFTTT](https://ifttt.com/) or [Zapier](https://zapier.com/)
 * You need an automatic data processing job.
 
   Ex: create thumbnails for profile pictures uploaded to your website
@@ -484,3 +484,38 @@ __That's it for now !__
 
 I'll be happy to have your opinion or feedback if you tried using Serverless or AWS Lambda, or if you have any question or suggestion about this tutorial.
 Feel free to leave a comment :)
+
+## Benchmarking MVP options
+
+### Pros and cons
+
+I rated Serverless, EC2 and Heroku based on three criteria:
+
+      | Serverless | EC2 | Heroku
+----- | ---------- | --- | -------
+Scalability | ++ | + | -
+Customuzation and services | + | ++ | -
+Ease of use | ok | ok | +
+
+On Heroku, you need to configure manually the scale of your infrastructure.
+You have less integrations than on AWS, but it is much more user friendly as it has 
+
+### Pricing
+I'll consider two scenarios:
+1. The custom IFFT: low traffic and light computing memory
+2. A data processing job running every day every hour
+ * Requiring less than 500MB RAM
+ * Requiring more than 500MB RAM
+
+      | Serverless | EC2 | Heroku
+----- | ---------- | --- | -------
+1 | 0.30€/month | 3€/month | Free for 1 app
+2.a | 0.67€/month | 4€/month | 7€/month
+2.b | 1.35€/month | 8€/month | 25€/month
+
+Heroku is still a good plan in case 1., but if you need a cron job every hour or if you need lots of computing memory, AWS is a better bargain, Serverless being the cheapest.
+
+Sources I used for my comparison:
+* [AWS Lambda Pricing in Context - A Comparison to EC2](https://www.trek10.com/blog/lambda-cost/)
+* [AWS Lambda Pricing Calculator](https://s3.amazonaws.com/lambda-tools/pricing-calculator.html) and [AWS Simple Monthly Calculator](http://calculator.s3.amazonaws.com/index.html)
+* [Heroku Pricing Page](https://www.heroku.com/pricing)
