@@ -388,6 +388,8 @@ module.exports.webhook = (event, context, callback) => {
   
  This means it is time to deploy your project for the first time!
 
+#### Deployment
+
 As easy as :
 
 ```shell
@@ -410,10 +412,10 @@ region: eu-central-1
 api keys:
   None
 endpoints:
-  GET - https://xg8r9awbh1.execute-api.eu-central-1.amazonaws.com/dev/webook
-  POST - https://xg8r9awbh1.execute-api.eu-central-1.amazonaws.com/dev/webook
+  GET - https://ENDPOINT_ID.execute-api.eu-central-1.amazonaws.com/dev/webook
+  POST - https://ENDPOINT_ID.execute-api.eu-central-1.amazonaws.com/dev/webook
 functions:
-  my-first-chatbot-dev-webhook: arn:aws:lambda:eu-central-1:918030227213:function:my-first-chatbot-dev-webhook
+  my-first-chatbot-dev-webhook: arn:aws:lambda:eu-central-1:ID:function:my-first-chatbot-dev-webhook
 ```
 
 Congratulations, your webhook is now available from anywhere!
@@ -442,12 +444,32 @@ Let's examine the first half of the logs to understand:
 
 What you can do now:
 * Invoke your deployed Lambda function
+
  ```shell
   $ sls invoke -f webhook -p -d "{\"method\":\"GET\",\"query\":{\"hub.verify_token\":\"SECRET_TOKEN_YOU_NEED_TO_CHANGE_AND_PROTECT\",\"hub.challenge\":123456}}"
   $ sls invoke -f webhook -p -d "{\"method\":\"GET\",\"query\":{\"hub.verify_token\":\"BAD_TOKEN\",\"hub.challenge\":123456}}"
   $ sls invoke -f webhook -d "{\"method\":\"POST\",\"body\":{\"entry\":[{\"messaging\":[{\"sender\":{\"id\":\"YOUR_SENDER_ID\"},\"message\":{\"text\":\"Hello\"}}]}]}}"
  ```
- * Test that your lamdba function is triggered when there is a call to one of the endpoints that just have been created
-  ```shell
-  $ curl -X GET ""
- ```
+ 
+* Test that your lamdba function is triggered when there is a call to one of the endpoints that just have been created
+
+ Using curl for instance to query the endpoint `https://ENDPOINT_ID.execute-api.eu-central-1.amazonaws.com/dev/webook`
+ 
+* Better, test your chatbot live!
+
+#### Send your first message to your chatbot
+ 
+Final settings for your Messenger app:
+ 
+ * Configure Messenger parameters to "Setup Webhooks" under "Webhooks" now that your endpoint is available.
+
+ * Use the endpoint url as "Callback URL", and your `SECRET_TOKEN_YOU_NEED_TO_CHANGE_AND_PROTECT`.
+ * Subscribe to `messages` and other Messenger events you might want to handle.
+ * "Verify and Save": Facebook will call the GET endpoint with the token your gave him to subscribe your webhook to the the app
+ * Once done, in the same "Webhook" section, select your Facebook page for subscription: you'll now listen to the events incoming from this page
+  
+Now for the chatbot to send you automatic messages, you need to start the conversation first (otherwise you'll get a 403)
+
+If your page is public, simply find your page in Messenger, and send your first message !
+
+(If you are not public yet, you can always go to the facebook page and start a conversation from there)
