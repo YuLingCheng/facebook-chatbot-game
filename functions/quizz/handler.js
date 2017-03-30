@@ -51,6 +51,11 @@ module.exports.webhook = (event, context, callback) => {
               bot.sendQuestion(senderId, entry.time)
                 .catch((error) => callback(new Error(error)));
 
+            } else if (textProcessor.isHelpCommand(text)) {
+              console.log('handle help request');
+              bot.sendHelpMessage(senderId, entry.time)
+                .catch((error) => callback(new Error(error)));
+
             } else {
               const db = mongojs(process.env.MONGO_URI);
               const questions = db.collection('questions');
