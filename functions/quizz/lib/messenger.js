@@ -173,6 +173,7 @@ module.exports = {
   handleAction: handleAction,
   notifyProcessing: notifyProcessing,
   sendPuzzledApology: sendPuzzledApology,
+  sendHelpMessage: sendHelpMessage,
   sendHint: sendHint,
   sendInitMessage: sendInitMessage,
   sendQuestion: sendQuestion,
