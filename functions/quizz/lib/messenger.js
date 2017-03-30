@@ -81,23 +81,25 @@ const sendAnswer = function (senderId, name) {
   );
 };
 
-const sendResponseToAnswer = function (senderId, success, personKey) {
+const sendResponseToAnswer = function (senderId, success, personKey, time) {
   const randomEmoji = emojis.happy[Math.floor(Math.random() * emojis.happy.length)];
   var message, buttons;
   if (success) {
-    message = 'Bravo '+ String.fromCodePoint(randomEmoji);
-    buttons = [scrib.getButton('Rejouer', 'INIT_PLAY')];
+    message = 'Bravo '+ String.fromCodePoint(randomEmoji) + '!';
+
+    return sendQuestion(senderId, time);
   } else {
     message = 'Essaye encore '+ String.fromCodePoint(randomEmoji);
     buttons = [
       scrib.getButton('Un indice !', `HINT_${personKey}`),
       scrib.getButton('La réponse', `ANSWER_${personKey}`)
     ];
+
+    return sendMessage(
+      senderId,
+      scrib.getMsgWithButtons(message, buttons)
+    );
   }
-  return sendMessage(
-    senderId,
-    scrib.getMsgWithButtons(message, buttons)
-  );
 };
 
 const sendHint = function (senderId, name, photo) {

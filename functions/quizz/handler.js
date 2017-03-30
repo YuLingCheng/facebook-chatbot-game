@@ -80,12 +80,11 @@ module.exports.webhook = (event, context, callback) => {
 
                    } else if (textProcessor.isRightAnswer(text, expectedAnswer)) {
                      console.log('Success');
-                     bot.sendResponseToAnswer(senderId, true, personKey)
-                       .then(() => bot.sendQuestion(senderId, entry.time+1))
+                     bot.sendResponseToAnswer(senderId, true, personKey, entry.time+1)
                        .catch((error) => callback(new Error(error)));
                    } else {
                      console.log('Failure');
-                     bot.sendResponseToAnswer(senderId, false, personKey)
+                     bot.sendResponseToAnswer(senderId, false, personKey, entry.time+1)
                        .catch((error) => callback(new Error(error)));
                    }
 
