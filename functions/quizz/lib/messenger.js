@@ -126,7 +126,7 @@ const sendHelpMessage = function(senderId) {
   return sendMessage(
     senderId,
     scrib.getMsgWithHelpers(
-      'Apprends à connaître le nom des Theodoers; je te montre une photo et tu me donnes son prénom.',
+      'Apprends à connaître le nom des Theodoers; je te montre une photo et tu me donnes son prénom. La liste se trouve ici : http://www.theodo.fr/fr/theodo/les-theodoers',
       [scrib.getQuickReply('J\'ai compris', 'INIT_PLAY')]
     )
   );
