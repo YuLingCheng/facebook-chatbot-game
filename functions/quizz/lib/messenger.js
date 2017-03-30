@@ -50,8 +50,9 @@ const saveQuestionToDb = function (senderId, answer, time) {
   });
 };
 
-const sendQuestion = function (senderId, time) {
+const sendQuestion = function (senderId, time, cheer) {
   const randomPerson = photos[Math.floor(Math.random() * photos.length)];
+  const randomEmoji = emojis.happy[Math.floor(Math.random() * emojis.happy.length)];
   saveQuestionToDb(senderId, teamList[randomPerson], time);
   var promise = sendMessage(
     senderId,
@@ -60,7 +61,7 @@ const sendQuestion = function (senderId, time) {
   sendMessage(
     senderId,
     scrib.getMsgWithButtons(
-      'Qui est-ce ? (prénom)',
+      (cheer? `Bravo ${String.fromCodePoint(randomEmoji)} ! ` : '' )+ 'Qui est-ce ?',
       [
         scrib.getButton('Voir la réponse', `ANSWER_${randomPerson}`),
         scrib.getButton('Indice', `HINT_${randomPerson}`)
@@ -75,7 +76,7 @@ const sendAnswer = function (senderId, name) {
   return sendMessage(
     senderId,
     scrib.getMsgWithButtons(
-      `C'est ${name} ` + String.fromCodePoint(randomEmoji),
+      `C'est ${name} ${String.fromCodePoint(randomEmoji)}`,
       [scrib.getButton('Rejouer', 'INIT_PLAY')]
     )
   );
@@ -85,11 +86,9 @@ const sendResponseToAnswer = function (senderId, success, personKey, time) {
   const randomEmoji = emojis.happy[Math.floor(Math.random() * emojis.happy.length)];
   var message, buttons;
   if (success) {
-    message = 'Bravo '+ String.fromCodePoint(randomEmoji) + '!';
-
-    return sendQuestion(senderId, time);
+    return sendQuestion(senderId, time, true);
   } else {
-    message = 'Essaye encore '+ String.fromCodePoint(randomEmoji);
+    message = `Essaye encore ${String.fromCodePoint(randomEmoji)}`;
     buttons = [
       scrib.getButton('Un indice !', `HINT_${personKey}`),
       scrib.getButton('La réponse', `ANSWER_${personKey}`)
