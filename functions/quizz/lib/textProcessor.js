@@ -48,7 +48,7 @@ const isHintCommand = function (text) {
 };
 
 const isName = function (text) {
-  return preprocessText(text).wordCount <= 3;
+  return preprocessText(text).wordCount <= 2;
 };
 
 const isRightAnswer = function (text, answer) {
