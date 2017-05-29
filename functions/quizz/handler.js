@@ -1,11 +1,8 @@
 'use strict';
 const mongojs = require('mongojs');
 
-const bot = require('./lib/messenger.js');
+const referee = require('./lib/referee.js');
 const textProcessor = require('./lib/textProcessor.js');
-
-const teamList = require('./resources/team.json');
-const photos = Object.keys(teamList);
 
 module.exports.webhook = (event, context, callback) => {
   if (event.method === 'GET') {
@@ -26,76 +23,77 @@ module.exports.webhook = (event, context, callback) => {
         // handle button action
         if (messagingItem.postback && messagingItem.postback.payload) {
           console.log(`handle ${messagingItem.postback.payload}`);
-          bot.handleAction(messagingItem.postback.payload, senderId, entry.time)
-            .catch((error) => callback(new Error(error)));
+          referee.handleAction(messagingItem.postback.payload, senderId, entry.time);
 
         // handle text message
         } else if (messagingItem.message) {
-          bot.notifyProcessing(senderId)
-            .catch((error) => callback(new Error(error)));
+          referee.notifyProcessing(senderId);
           const msg = messagingItem.message;
 
           // handle quick message
           if (msg.quick_reply && msg.quick_reply.payload) {
             console.log(`handle quick msg ${msg.quick_reply.payload}`);
-            bot.handleAction(msg.quick_reply.payload, senderId, entry.time)
-              .catch((error) => callback(new Error(error)));
+            referee.handleAction(msg.quick_reply.payload, senderId, entry.time);
 
           // handle any text message
-          } else if (msg.text) {
+        } else if (msg.text) {
             var text = msg.text;
 
             // handle play request
             if (textProcessor.isPlayCommand(text)) {
               console.log('handle play request');
-              bot.sendQuestion(senderId, entry.time)
-                .catch((error) => callback(new Error(error)));
+              referee.generateQuestion(senderId, entry.time);
 
+            // handle help request
             } else if (textProcessor.isHelpCommand(text)) {
               console.log('handle help request');
-              bot.sendHelpMessage(senderId, entry.time)
-                .catch((error) => callback(new Error(error)));
+              referee.sendHelpMessage(senderId, entry.time);
+
+            // handle hint request
+            } else if (textProcessor.isHintCommand(text)) {
+              console.log('handle hint request');
+              referee.sendHint(senderId);
+
+            // handle score request
+            } else if (textProcessor.isScoreCommand(text)) {
+              console.log('handle score request');
+              referee.sendScore(senderId);
+
+            // handle unknown text
+            } else if (!textProcessor.isName(text)) {
+              console.log('Unknown text');
+              referee.sendPuzzledApology(senderId);
 
             } else {
               const db = mongojs(process.env.MONGO_URI);
-              const questions = db.collection('questions');
-              questions.find({senderId: senderId}).sort({time: -1}).toArray(function(err, result) {
-                if (err) throw err;
+              db.collection('records')
+                .find({senderId: senderId})
+                .sort({time: -1})
+                .limit(1)
+                .toArray(function(err, result) {
+                  if (err) throw err;
 
-                // handle answer to question
-                if (result.length > 0) {
-                   var expectedAnswer = result[0].answer;
-                   var personKey = photos.find(key => teamList[key] === expectedAnswer);
+                  // handle answer to question
+                  if (result.length === 1) {
+                    // get expectedAnswer
+                    const expectedAnswer = result[0].firstname;
+                    const personKey = result[0].key
 
-                   // handle hint request
-                   if (textProcessor.isHintCommand(text)) {
-                     console.log('handle hint request');
-                     bot.sendHint(senderId, expectedAnswer, personKey)
-                       .catch((error) => callback(new Error(error)));
+                    if (textProcessor.isRightAnswer(text, expectedAnswer)) {
+                      console.log('Success');
+                      referee.sendResponseToAnswer(senderId, true, personKey, entry.time+1);
+                    } else {
+                      console.log('Failure');
+                      referee.sendResponseToAnswer(senderId, false, personKey, entry.time+1);
+                    }
 
-                   } else if (!textProcessor.isName(text)) {
-                     console.log('Unknown text');
-                     bot.sendPuzzledApology(senderId)
-                       .catch((error) => callback(new Error(error)));
-
-                   } else if (textProcessor.isRightAnswer(text, expectedAnswer)) {
-                     console.log('Success');
-                     bot.sendResponseToAnswer(senderId, true, personKey, entry.time+1)
-                       .catch((error) => callback(new Error(error)));
-                   } else {
-                     console.log('Failure');
-                     bot.sendResponseToAnswer(senderId, false, personKey, entry.time+1)
-                       .catch((error) => callback(new Error(error)));
-                   }
-
-                 // handle message that is not recognized
-                } else {
-                  console.log('could not handle message');
-                  bot.sendInitMessage(senderId)
-                    .catch((error) => callback(new Error(error)));
-                }
-                db.close();
-              });
+                  // handle message that is not recognized
+                  } else {
+                    console.log('could not handle message');
+                    referee.sendInitMessage(senderId);
+                  }
+                  db.close();
+                });
             }
           }
         }

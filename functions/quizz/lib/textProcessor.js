@@ -39,8 +39,12 @@ const isHelpCommand = function (text) {
   return ['aide', 'help', '?'].indexOf(preprocessText(text).stemmedText) > -1;
 };
 
+const isScoreCommand = function (text) {
+  return ['score', 'stats'].indexOf(preprocessText(text).stemmedText) > -1;
+};
+
 const isHintCommand = function (text) {
-  return ['indice'].indexOf(preprocessText(text).stemmedText) > -1;
+  return ['indice', 'hint'].indexOf(preprocessText(text).stemmedText) > -1;
 };
 
 const isName = function (text) {
@@ -52,9 +56,10 @@ const isRightAnswer = function (text, answer) {
 };
 
 module.exports = {
-  isPlayCommand: isPlayCommand,
   isHelpCommand: isHelpCommand,
   isHintCommand: isHintCommand,
   isName: isName,
+  isPlayCommand: isPlayCommand,
   isRightAnswer: isRightAnswer,
+  isScoreCommand: isScoreCommand,
 };
