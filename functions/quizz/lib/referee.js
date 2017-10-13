@@ -138,7 +138,7 @@ const sendAnswer = function (senderId) {
       // update score
       db.collection('records').update(
         { senderId: senderId, key: result[0].key },
-        { $inc: { score: -1.5 } }, function () {
+        { $inc: { score: -0.5 } }, function () {
         db.close();
 
         return sendMessage(
@@ -176,7 +176,7 @@ const sendResponseToAnswer = function (senderId, success, personKey, time) {
         }
         db.collection('records').update(
           { senderId: senderId, key: result[0].key },
-          { $inc: { score: -0.5 } }, function () {
+          { $inc: { score: -0.2 } }, function () {
             db.close();
             message = `Essaye encore ${String.fromCodePoint(randomEmoji)}`;
             buttons = [
@@ -207,7 +207,7 @@ const sendHint = function (senderId) {
       // update score
       db.collection('records').update(
         { senderId: senderId, key: result[0].key },
-        { $inc: { score: -1 } }, function (err) {
+        { $inc: { score: -0.1 } }, function (err) {
           db.close();
 
           return sendMessage(
