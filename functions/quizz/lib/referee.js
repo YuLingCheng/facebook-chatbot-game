@@ -3,6 +3,7 @@ const mongojs = require('mongojs');
 
 const scrib = require('./scrib.js');
 const emojis = require('../resources/emojis.json');
+const greetings = ['Hello', 'Bonjour', 'Salut'];
 
 const pageUrl = `https://graph.facebook.com/v2.6/me/messages?access_token=${process.env.FB_PAGE_ACCESS_TOKEN}`;
 
@@ -35,6 +36,7 @@ const notifyProcessing = function (senderId) {
 
 const sendQuestion = function (senderId, randomPerson, cheer) {
   const randomEmoji = emojis.happy[Math.floor(Math.random() * emojis.happy.length)];
+  const randGreeting = greetings[Math.floor(Math.random() * greetings.length)];
   var promise = sendMessage(
     senderId,
     scrib.getImageMsg(randomPerson.img)
@@ -42,7 +44,7 @@ const sendQuestion = function (senderId, randomPerson, cheer) {
   sendMessage(
     senderId,
     scrib.getMsgWithButtons(
-      (cheer? `Bravo ${String.fromCodePoint(randomEmoji)} ! ` : '' )+ 'Qui est-ce ?',
+      (cheer? `Bravo ${String.fromCodePoint(randomEmoji)} ! ` : '' )+ `${randGreeting}...`,
       [
         scrib.getButton('Voir la réponse', 'ANSWER'),
         scrib.getButton('Indice', 'HINT')
