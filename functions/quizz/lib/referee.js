@@ -236,8 +236,8 @@ const sendHelpMessage = function(senderId) {
   return sendMessage(
     senderId,
     scrib.getMsgWithHelpers(
-      'Apprends à connaître le nom des Theodoers !\nJe te montre une photo et tu me donnes son prénom.\nLa liste se trouve ici : http://www.theodo.fr/fr/theodo/les-theodoers \nCheck ton score en tappant "stats" ou "score"',
-      [scrib.getQuickReply('J\'ai compris', 'INIT_PLAY')]
+      'Dire bonjour à ses collègues avec leur prénom ça fait toujours marquer des points !\nLa liste se trouve ici : http://www.theodo.fr/fr/theodo/les-theodoers \n"Play" pour commencer une série\n"Indice" pour un petit coup de pouce\n"Stats" pour le score',
+      [scrib.getQuickReply('C\'est parti !', 'INIT_PLAY')]
     )
   );
 };
