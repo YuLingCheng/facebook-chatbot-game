@@ -73,10 +73,11 @@ const generateQuestion = function (senderId, time, cheer) {
         });
 
         // if they are all in the records get the ones with lowest scores
+        // excluding people that left and aren't in peopleKeyList anymore
         if (list.length === 0) {
           const minScore = records[0].score;
           const minScoreKeyList = records.filter(function(record) {
-            return record.score <= minScore+1.5;
+            return peopleKeyList.indexOf(record.key) >= 0 && record.score <= minScore+1.5;
           }).map(function(record) {
             return record.key;
           });
