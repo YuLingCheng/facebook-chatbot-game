@@ -1,5 +1,5 @@
 module.exports = {
-  getImageMsg : function (url) {
+  getImageMsg : url => {
     return {
       attachment: {
         type: 'image',
@@ -7,10 +7,10 @@ module.exports = {
           url: url
         }
       }
-    };
+    }
   },
 
-  getMsgWithButtons: function (msg, buttons) {
+  getMsgWithButtons: (msg, buttons) => {
     return {
       attachment: {
         type: 'template',
@@ -20,29 +20,29 @@ module.exports = {
           buttons: buttons
         }
       }
-    };
+    }
   },
 
-  getButton: function (label, action) {
+  getButton: (label, action) => {
     return {
       type: 'postback',
       title: label,
       payload: action
-    };
+    }
   },
 
-  getQuickReply: function (label, action) {
+  getQuickReply: (label, action) => {
     return {
       content_type: 'text',
       title: label,
       payload: action
-    };
+    }
   },
 
-  getMsgWithHelpers: function (msg, helpers) {
+  getMsgWithHelpers: (msg, helpers) => {
     return {
       text: msg,
       quick_replies: helpers
-    };
+    }
   }
-};
+}

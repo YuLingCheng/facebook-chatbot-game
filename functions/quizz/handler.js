@@ -1,17 +1,19 @@
-'use strict';
-const mongojs = require('mongojs');
+'use strict'
 
-const referee = require('./lib/referee.js');
-const textProcessor = require('./lib/textProcessor.js');
+const recordsResource = require('./resources/recordsResource.js')
+const responseManager = require('./services/responseManager.js')
+const gameMaster = require('./services/gameMaster.js')
+const chatbot = require('./services/chatbot.js')
+const textProcessor = require('./services/textProcessor.js')
 
 module.exports.webhook = (event, context, callback) => {
   if (event.method === 'GET') {
     // facebook app verification
     if (event.query['hub.verify_token'] === process.env.FB_APP_TOKEN && event.query['hub.challenge']) {
-      return callback(null, parseInt(event.query['hub.challenge']));
+      return callback(null, parseInt(event.query['hub.challenge']))
 
     } else {
-      return callback(new Error('[403] Invalid token'));
+      return callback(new Error('[403] Invalid token'))
     }
   }
 
@@ -22,95 +24,148 @@ module.exports.webhook = (event, context, callback) => {
 
         // handle button action
         if (messagingItem.postback && messagingItem.postback.payload) {
-          console.log(`handle ${messagingItem.postback.payload}`);
-          referee.handleAction(messagingItem.postback.payload, senderId, entry.time);
+          handleAction(senderId, messagingItem.postback.payload, entry.time).then(() => {
+            return callback(null, responseManager.get(200, `Handle ${messagingItem.postback.payload}`, event))
+          }).catch((err) => {
+            return callback(err)
+          })
 
         // handle text message
         } else if (messagingItem.message) {
-          referee.notifyProcessing(senderId);
-          const msg = messagingItem.message;
+          chatbot.notifyProcessing(senderId)
+          const msg = messagingItem.message
 
           // handle quick message
           if (msg.quick_reply && msg.quick_reply.payload) {
-            console.log(`handle quick msg ${msg.quick_reply.payload}`);
-            referee.handleAction(msg.quick_reply.payload, senderId, entry.time);
+            handleAction(senderId, msg.quick_reply.payload, entry.time).then(() => {
+              return callback(null, responseManager.get(200, `Handle ${msg.quick_reply.payload}`, event))
+            }).catch((err) => {
+              return callback(err)
+            })
 
           // handle any text message
         } else if (msg.text) {
-            var text = msg.text;
+            const text = msg.text
 
             // handle play request
             if (textProcessor.isPlayCommand(text)) {
-              console.log('handle play request');
-              referee.generateQuestion(senderId, entry.time);
+              return gameMaster.generateQuestion(
+                senderId,
+                entry.time
+              ).then(question => {
+                return chatbot.sendQuestion(senderId, question)
+              }).then(() => {
+                return callback(null, responseManager.get(200, 'Handle play request', event))
+              }).catch((err) => {
+                return callback(err)
+              })
 
             // handle help request
             } else if (textProcessor.isHelpCommand(text)) {
-              console.log('handle help request');
-              referee.sendHelpMessage(senderId, entry.time);
+              chatbot.sendHelpMessage(senderId).then(() => {
+                return callback(null, responseManager.get(200, 'Handle help request', event))
+              }).catch((err) => {
+                return callback(err)
+              })
 
             // handle hint request
             } else if (textProcessor.isHintCommand(text)) {
-              console.log('handle hint request');
-              referee.sendHint(senderId);
+              recordsResource.findLastBySenderId(senderId).then(lastRecord => {
+                const personKey = lastRecord.key
+                return Promise.all([
+                  gameMaster.updateScore(senderId, personKey, 'hint'),
+                  chatbot.sendHint(senderId, personKey)
+                ])
+              }).then(() => {
+                return callback(null, responseManager.get(200, 'Handle hint request', event))
+              }).catch((err) => {
+                return callback(err)
+              })
 
             // handle score request
             } else if (textProcessor.isScoreCommand(text)) {
-              console.log('handle score request');
-              referee.sendScore(senderId);
+              gameMaster.computeScore(senderId).then(scoreValues => {
+                return chatbot.sendScore(senderId, scoreValues)
+              }).then(() => {
+                return callback(null, responseManager.get(200, 'Handle score request', event))
+              }).catch((err) => {
+                return callback(err)
+              })
+              // referee.sendScore(senderId);
 
             // handle unknown text
             } else if (!textProcessor.isName(text)) {
-              console.log('Unknown text');
-              referee.sendPuzzledApology(senderId);
+              chatbot.sendPuzzledApology(senderId).then(() => {
+                return callback(null, responseManager.get(200, 'Unknown text', event))
+              }).catch((err) => {
+                return callback(err)
+              })
 
             } else {
-              const db = mongojs(process.env.MONGO_URI);
-              db.collection('records')
-                .find({senderId: senderId})
-                .sort({time: -1})
-                .limit(1)
-                .toArray(function(err, result) {
-                  if (err) throw err;
-
-                  // handle answer to question
-                  if (result.length === 1) {
-                    // get expectedAnswer
-                    const expectedAnswer = result[0].firstname;
-                    const personKey = result[0].key
-
-                    if (textProcessor.isRightAnswer(text, expectedAnswer)) {
-                      console.log('Success');
-                      referee.sendResponseToAnswer(senderId, true, personKey, entry.time+1);
+              recordsResource.findLastBySenderId(senderId).then(lastRecord => {
+                if (lastRecord) {
+                  const isSuccess = gameMaster.processAnswer(lastRecord, text)
+                  const personKey = lastRecord.key
+                  const answerType = isSuccess ? 'right' : 'wrong'
+                  gameMaster.updateScore(senderId, personKey, answerType).then(() => {
+                    if (isSuccess) {
+                      return gameMaster.generateQuestion(senderId, entry.time).then(question => {
+                        return chatbot.sendQuestion(senderId, question, true)
+                      })
                     } else {
-                      console.log('Failure');
-                      referee.sendResponseToAnswer(senderId, false, personKey, entry.time+1);
+                      return chatbot.sendResponseToBadAnswer(senderId)
                     }
-
-                  // handle message that is not recognized
-                  } else {
-                    console.log('could not handle message');
-                    referee.sendInitMessage(senderId);
-                  }
-                  db.close();
-                });
+                  }).then(() => {
+                    return callback(null, responseManager.get(200, 'Handle answer request', event))
+                  }).catch((err) => {
+                    return callback(err)
+                  })
+                } else {
+                  chatbot.sendInitMessage(senderId).then(() => {
+                    return callback(null, responseManager.get(200, 'No question asked', event))
+                  }).catch((err) => {
+                    return callback(err)
+                  })
+                }
+              })
             }
           }
         }
-      });
-    });
+      })
+    })
   } else {
-    const response = {
-      statusCode: 400,
-      body: JSON.stringify({
-        message: 'Bad Request',
-        input: event,
-      }),
-    };
-
-    return callback(null, response);
+    return callback(null, responseManager.get(400, 'Bad Request', event))
   }
+}
 
-  // Use this code if you don't use the http event with the LAMBDA-PROXY integration
-  // callback(null, { message: 'Go Serverless v1.0! Your function executed successfully!', event });
-};
+const handleAction = (senderId, action, time) => {
+  switch (action) {
+    case 'ANSWER':
+      return recordsResource.findLastBySenderId(senderId).then(lastRecord => {
+        return Promise.all([
+          gameMaster.updateScore(senderId, lastRecord.key, 'drop'),
+          chatbot.sendAnswer(senderId, lastRecord.firstname)
+        ])
+      })
+    case 'HINT':
+      return recordsResource.findLastBySenderId(senderId).then(lastRecord => {
+        const personKey = lastRecord.key
+        return Promise.all([
+          gameMaster.updateScore(senderId, personKey, 'hint'),
+          chatbot.sendHint(senderId, personKey)
+        ])
+      })
+    case 'SCORE':
+      return gameMaster.computeScore(senderId).then(scoreValues => {
+        return chatbot.sendScore(senderId, scoreValues)
+      })
+    case 'INIT_PLAY':
+      return gameMaster.generateQuestion(senderId, time).then(question => {
+        return chatbot.sendQuestion(senderId, question)
+      })
+    case 'INIT_HELP':
+      return chatbot.sendHelpMessage(senderId)
+    default:
+      return chatbot.sendInitMessage(senderId)
+  }
+}
