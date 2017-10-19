@@ -1,18 +1,22 @@
-const mongojs = require('mongojs')
-const db = mongojs(process.env.MONGO_URI)
+'use strict';
 
-const findAll = () => {
-  return new Promise((resolve, reject) => {
-    db.collection('people').find({}, (err, people) => {
-      if (err) {return reject(err)}
+var mongojs = require('mongojs');
+var db = mongojs(process.env.MONGO_URI);
+
+var findAll = function findAll() {
+  return new Promise(function (resolve, reject) {
+    db.collection('people').find({}, function (err, people) {
+      if (err) {
+        return reject(err);
+      }
       try {
-        db.close()
+        // db.close();
       } catch (exception) {}
-      return resolve(people)
-    })
-  })
-}
+      return resolve(people);
+    });
+  });
+};
 
 module.exports = {
-  findAll
-}
+  findAll: findAll
+};

@@ -1,38 +1,48 @@
-const secretary = require('./secretary.js');
-const peopleResource = require('../resources/peopleResource.js');
-const recordsResource = require('../resources/recordsResource.js');
-const textProcessor = require('./textProcessor.js');
-const listManager = require('./listManager.js')
+'use strict';
 
-const getUnknownPeople = (records, people) => {
+var secretary = require('./secretary.js');
+var peopleResource = require('../resources/peopleResource.js');
+var recordsResource = require('../resources/recordsResource.js');
+var textProcessor = require('./textProcessor.js');
+var listManager = require('./listManager.js');
+
+var getUnknownPeople = function getUnknownPeople(records, people) {
   // find people that are not in the records yet
-  const recordKeyList = records.map(record => (record.key))
-  return people.filter(person => (recordKeyList.indexOf(person.key) < 0))
-}
+  var recordKeyList = records.map(function (record) {
+    return record.key;
+  });
+  return people.filter(function (person) {
+    return recordKeyList.indexOf(person.key) < 0;
+  });
+};
 
-const getLeastKnownPeople = (records, people) => {
-  const peopleKeyList = people.map(person => (person.key))
-  const minScore = records[0].score;
-  const minScoreKeyList = records
-    .filter(record => (peopleKeyList.indexOf(record.key) >= 0 && record.score <= minScore + 1.5))
-    .map(record => (record.key))
-  return people.filter(person => (minScoreKeyList.indexOf(person.key) >= 0))
-}
+var getLeastKnownPeople = function getLeastKnownPeople(records, people) {
+  var peopleKeyList = people.map(function (person) {
+    return person.key;
+  });
+  var minScore = records[0].score;
+  var minScoreKeyList = records.filter(function (record) {
+    return peopleKeyList.indexOf(record.key) >= 0 && record.score <= minScore + 1.5;
+  }).map(function (record) {
+    return record.key;
+  });
+  return people.filter(function (person) {
+    return minScoreKeyList.indexOf(person.key) >= 0;
+  });
+};
 
-const generateQuestion = (senderId, time) => {
+var generateQuestion = function generateQuestion(senderId, time) {
   // generate a question and saves it to database
-  let randomPerson, candidateList
+  var randomPerson = void 0,
+      candidateList = void 0;
 
-  return new Promise((resolve, reject) => {
-    Promise.all([
-      peopleResource.findAll(),
-      recordsResource.findBySenderId(senderId)
-    ]).then(values => {
-      const people = values[0]
-      const records = values[1]
-      candidateList = getUnknownPeople(records, people)
+  return new Promise(function (resolve, reject) {
+    Promise.all([peopleResource.findAll(), recordsResource.findBySenderId(senderId)]).then(function (values) {
+      var people = values[0];
+      var records = values[1];
+      candidateList = getUnknownPeople(records, people);
       if (candidateList.length > 0) {
-        randomPerson = listManager.getRandomItem(candidateList)
+        randomPerson = listManager.getRandomItem(candidateList);
 
         // insert a new record
         return recordsResource.insertOne({
@@ -41,104 +51,110 @@ const generateQuestion = (senderId, time) => {
           score: 0,
           senderId: senderId,
           time: time
-        })
+        });
       } else {
-        candidateList = getLeastKnownPeople(records, people)
-        randomPerson = listManager.getRandomItem(candidateList)
+        candidateList = getLeastKnownPeople(records, people);
+        randomPerson = listManager.getRandomItem(candidateList);
 
         // update records with new question time
-        return recordsResource.updateOne(senderId, randomPerson.key, time)
+        return recordsResource.updateOne(senderId, randomPerson.key, time);
       }
-    }).then(() => {
-      return resolve(randomPerson)
-    }).catch(err => {
-      reject(err)
-    })
-  })
-}
+    }).then(function () {
+      return resolve(randomPerson);
+    }).catch(function (err) {
+      reject(err);
+    });
+  });
+};
 
-const processAnswer = (lastRecord, answer) => {
-  const expectedAnswer = lastRecord.firstname
-  const personKey = lastRecord.key
-  return textProcessor.isRightAnswer(answer, expectedAnswer)
-}
+var processAnswer = function processAnswer(lastRecord, answer) {
+  var expectedAnswer = lastRecord.firstname;
+  var personKey = lastRecord.key;
+  return textProcessor.isRightAnswer(answer, expectedAnswer);
+};
 
-const updateScore = (senderId, personKey, answerType) => {
-  let scoreDiff, closeConnection
+var updateScore = function updateScore(senderId, personKey, answerType) {
+  var scoreDiff = void 0,
+      closeConnection = void 0;
   switch (answerType) {
     case 'right':
-      scoreDiff = 1
-      break
+      scoreDiff = 1;
+      break;
     case 'wrong':
-      scoreDiff = -0.2
-      closeConnection = true
-      break
+      scoreDiff = -0.2;
+      closeConnection = true;
+      break;
     case 'hint':
-      scoreDiff = -0.1
-      closeConnection = true
-      break
+      scoreDiff = -0.1;
+      closeConnection = true;
+      break;
     case 'drop':
-      scoreDiff = -0.5
-      closeConnection = true
-      break
+      scoreDiff = -0.5;
+      closeConnection = true;
+      break;
     default:
-      scoreDiff = 0
-      closeConnection = false
+      scoreDiff = 0;
+      closeConnection = false;
   }
-  return new Promise((resolve, reject) => {
-    recordsResource.increaseScoreBy(senderId, personKey, scoreDiff, closeConnection).then(() =>{
-      return resolve()
-    }).catch(err => {return reject(err)})
-  })
-}
+  return new Promise(function (resolve, reject) {
+    recordsResource.increaseScoreBy(senderId, personKey, scoreDiff, closeConnection).then(function () {
+      return resolve();
+    }).catch(function (err) {
+      return reject(err);
+    });
+  });
+};
 
-const sumScores = records => {
-  return records
-    .map(record => (record.score))
-    .reduce((score1, score2) => (score1 + score2), 0)
-}
+var sumScores = function sumScores(records) {
+  return records.map(function (record) {
+    return record.score;
+  }).reduce(function (score1, score2) {
+    return score1 + score2;
+  }, 0);
+};
 
-const computeScore = senderId => {
-  return new Promise((resolve, reject) => {
-    Promise.all([
-      peopleResource.findAll(),
-      recordsResource.findBySenderId(senderId, true)
-    ]).then(values => {
-      const people = values[0]
-      const records = values[1]
-      const negativeRecords = records.filter(record => { return record.score <= 0 })
-      const negativeQuota = negativeRecords.length
-      const negativeScore = sumScores(negativeRecords)
-      const positiveRecords = records.filter(record => { return record.score > 0 })
-      const positiveQuota = positiveRecords.length
-      const positiveScore = sumScores(positiveRecords)
+var computeScore = function computeScore(senderId) {
+  return new Promise(function (resolve, reject) {
+    Promise.all([peopleResource.findAll(), recordsResource.findBySenderId(senderId, true)]).then(function (values) {
+      var people = values[0];
+      var records = values[1];
+      var negativeRecords = records.filter(function (record) {
+        return record.score <= 0;
+      });
+      var negativeQuota = negativeRecords.length;
+      var negativeScore = sumScores(negativeRecords);
+      var positiveRecords = records.filter(function (record) {
+        return record.score > 0;
+      });
+      var positiveQuota = positiveRecords.length;
+      var positiveScore = sumScores(positiveRecords);
 
-      const score = ((negativeScore + positiveScore) * 100 / (positiveScore + negativeQuota)).toFixed(2)
-      let scoreEmoji = '0x1F631'
+      var score = ((negativeScore + positiveScore) * 100 / (positiveScore + negativeQuota)).toFixed(2);
+      var scoreEmoji = '0x1F631';
       if (score >= 0 && score < 25) {
-        scoreEmoji = '0x1F648'
+        scoreEmoji = '0x1F648';
       } else if (score >= 25 && score < 50) {
-        scoreEmoji = '0x1F64A'
+        scoreEmoji = '0x1F64A';
       } else if (score >= 50 && score < 75) {
-        scoreEmoji = '0x1F64B'
+        scoreEmoji = '0x1F64B';
       } else if (score >= 75 && score < 100) {
-        scoreEmoji = '0x1F64C'
+        scoreEmoji = '0x1F64C';
       } else if (score >= 100) {
-        scoreEmoji = '0x1F680'
+        scoreEmoji = '0x1F680';
       }
 
-      const coverage = ((people.length - getUnknownPeople(records, people).length) * 100 / people.length).toFixed(2)
-      let coverageEmoji = '0x1F631'
+      var coverage = ((people.length - getUnknownPeople(records, people).length) * 100 / people.length).toFixed(2);
+      var coverageEmoji = '0x1F631';
       if (coverage >= 0 && coverage < 25) {
-        coverageEmoji = '0x1F423'
+        coverageEmoji = '0x1F423';
       } else if (coverage >= 25 && coverage < 50) {
-        coverageEmoji = '0x1F425'
+        coverageEmoji = '0x1F425';
       } else if (coverage >= 50 && coverage < 75) {
-        coverageEmoji = '0x1F414'
+        coverageEmoji = '0x1F414';
       } else if (coverage >= 75 && coverage < 100) {
-        coverageEmoji = '0x1F44C'
+        coverageEmoji = '0x1F44C';
       } else if (coverage >= 100) {
-        coverageEmoji = '0x1F44F'
+        coverageEmoji = '0x1F44F';
       }
 
       return resolve({
@@ -150,14 +166,16 @@ const computeScore = senderId => {
           emoji: scoreEmoji,
           value: score
         }
-      })
-    }).catch(err => {return reject(err)})
-  })
-}
+      });
+    }).catch(function (err) {
+      return reject(err);
+    });
+  });
+};
 
 module.exports = {
-  computeScore,
-  generateQuestion,
-  processAnswer,
-  updateScore
-}
+  computeScore: computeScore,
+  generateQuestion: generateQuestion,
+  processAnswer: processAnswer,
+  updateScore: updateScore
+};

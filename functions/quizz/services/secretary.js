@@ -1,5 +1,7 @@
+'use strict';
+
 module.exports = {
-  getImageMsg : url => {
+  getImageMsg: function getImageMsg(url) {
     return {
       attachment: {
         type: 'image',
@@ -7,10 +9,10 @@ module.exports = {
           url: url
         }
       }
-    }
+    };
   },
 
-  getMsgWithButtons: (msg, buttons) => {
+  getMsgWithButtons: function getMsgWithButtons(msg, buttons) {
     return {
       attachment: {
         type: 'template',
@@ -20,29 +22,29 @@ module.exports = {
           buttons: buttons
         }
       }
-    }
+    };
   },
 
-  getButton: (label, action) => {
+  getButton: function getButton(label, action) {
     return {
       type: 'postback',
       title: label,
       payload: action
-    }
+    };
   },
 
-  getQuickReply: (label, action) => {
+  getQuickReply: function getQuickReply(label, action) {
     return {
       content_type: 'text',
       title: label,
       payload: action
-    }
+    };
   },
 
-  getMsgWithHelpers: (msg, helpers) => {
+  getMsgWithHelpers: function getMsgWithHelpers(msg, helpers) {
     return {
       text: msg,
       quick_replies: helpers
-    }
+    };
   }
-}
+};
