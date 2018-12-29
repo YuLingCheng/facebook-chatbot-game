@@ -31,13 +31,13 @@ var getLeastKnownPeople = function getLeastKnownPeople(records, people) {
   });
 };
 
-var generateQuestion = function generateQuestion(senderId, time) {
+var generateQuestion = function generateQuestion(db, senderId, time) {
   // generate a question and saves it to database
   var randomPerson = void 0,
       candidateList = void 0;
 
   return new Promise(function (resolve, reject) {
-    Promise.all([peopleResource.findAll(), recordsResource.findBySenderId(senderId)]).then(function (values) {
+    Promise.all([peopleResource.findAll(db), recordsResource.findBySenderId(db, senderId)]).then(function (values) {
       var people = values[0];
       var records = values[1];
       candidateList = getUnknownPeople(records, people);
@@ -45,7 +45,7 @@ var generateQuestion = function generateQuestion(senderId, time) {
         randomPerson = listManager.getRandomItem(candidateList);
 
         // insert a new record
-        return recordsResource.insertOne({
+        return recordsResource.insertOne(db, {
           key: randomPerson.key,
           firstname: randomPerson.firstname,
           score: 0,
@@ -57,7 +57,7 @@ var generateQuestion = function generateQuestion(senderId, time) {
         randomPerson = listManager.getRandomItem(candidateList);
 
         // update records with new question time
-        return recordsResource.updateOne(senderId, randomPerson.key, time);
+        return recordsResource.updateOne(db, senderId, randomPerson.key, time);
       }
     }).then(function () {
       return resolve(randomPerson);
@@ -73,31 +73,26 @@ var processAnswer = function processAnswer(lastRecord, answer) {
   return textProcessor.isRightAnswer(answer, expectedAnswer);
 };
 
-var updateScore = function updateScore(senderId, personKey, answerType) {
-  var scoreDiff = void 0,
-      closeConnection = void 0;
+var updateScore = function updateScore(db, senderId, personKey, answerType) {
+  var scoreDiff = void 0;
   switch (answerType) {
     case 'right':
       scoreDiff = 1;
       break;
     case 'wrong':
       scoreDiff = -0.2;
-      closeConnection = true;
       break;
     case 'hint':
       scoreDiff = -0.1;
-      closeConnection = true;
       break;
     case 'drop':
       scoreDiff = -0.5;
-      closeConnection = true;
       break;
     default:
       scoreDiff = 0;
-      closeConnection = false;
   }
   return new Promise(function (resolve, reject) {
-    recordsResource.increaseScoreBy(senderId, personKey, scoreDiff, closeConnection).then(function () {
+    recordsResource.increaseScoreBy(db, senderId, personKey, scoreDiff).then(function () {
       return resolve();
     }).catch(function (err) {
       return reject(err);
@@ -113,11 +108,12 @@ var sumScores = function sumScores(records) {
   }, 0);
 };
 
-var computeScore = function computeScore(senderId) {
+var computeScore = function computeScore(db, senderId) {
   return new Promise(function (resolve, reject) {
-    Promise.all([peopleResource.findAll(), recordsResource.findBySenderId(senderId, true)]).then(function (values) {
+    Promise.all([peopleResource.findAll(db), recordsResource.findBySenderId(db, senderId, true)]).then(function (values) {
       var people = values[0];
       var records = values[1];
+      var score = 0;
       var negativeRecords = records.filter(function (record) {
         return record.score <= 0;
       });
@@ -129,7 +125,7 @@ var computeScore = function computeScore(senderId) {
       var positiveQuota = positiveRecords.length;
       var positiveScore = sumScores(positiveRecords);
 
-      var score = ((negativeScore + positiveScore) * 100 / (positiveScore + negativeQuota)).toFixed(2);
+      score = ((negativeScore + positiveScore) * 100 / (positiveScore + negativeQuota)).toFixed(2);
       var scoreEmoji = '0x1F631';
       if (score >= 0 && score < 25) {
         scoreEmoji = '0x1F648';

@@ -22,19 +22,23 @@ var preprocessText = function preprocessText(text) {
 };
 
 var isPlayCommand = function isPlayCommand(text) {
-  return ['jouer', 'play', 'rejouer'].indexOf(preprocessText(text).stemmedText) > -1;
+  return ['jouer', 'play', 'rejouer', 'j', 'p'].indexOf(preprocessText(text).stemmedText) > -1;
 };
 
 var isHelpCommand = function isHelpCommand(text) {
-  return ['aide', 'help', '?'].indexOf(preprocessText(text).stemmedText) > -1;
+  return ['aide', 'help', '?', 'h'].indexOf(preprocessText(text).stemmedText) > -1;
 };
 
 var isScoreCommand = function isScoreCommand(text) {
-  return ['score', 'stats'].indexOf(preprocessText(text).stemmedText) > -1;
+  return ['score', 'stats', 's'].indexOf(preprocessText(text).stemmedText) > -1;
 };
 
 var isHintCommand = function isHintCommand(text) {
-  return ['indice', 'hint'].indexOf(preprocessText(text).stemmedText) > -1;
+  return ['indice', 'hint', 'i'].indexOf(preprocessText(text).stemmedText) > -1;
+};
+
+var isAnswerCommand = function isAnswerCommand(text) {
+  return ['réponse', 'answer', 'r', 'a'].indexOf(preprocessText(text).stemmedText) > -1;
 };
 
 var isName = function isName(text) {
@@ -48,6 +52,7 @@ var isRightAnswer = function isRightAnswer(text, answer) {
 module.exports = {
   isHelpCommand: isHelpCommand,
   isHintCommand: isHintCommand,
+  isAnswerCommand: isAnswerCommand,
   isName: isName,
   isPlayCommand: isPlayCommand,
   isRightAnswer: isRightAnswer,

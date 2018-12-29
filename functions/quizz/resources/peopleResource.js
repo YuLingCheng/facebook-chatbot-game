@@ -1,11 +1,8 @@
-'use strict';
+"use strict";
 
-var mongojs = require('mongojs');
-var db = mongojs(process.env.MONGO_URI);
-
-var findAll = function findAll() {
-  return new Promise(function (resolve, reject) {
-    db.collection('people').find({}, function (err, people) {
+var findAll = function findAll(db) {
+  return new Promise(function(resolve, reject) {
+    db.collection("people").find({}, function(err, people) {
       if (err) {
         return reject(err);
       }

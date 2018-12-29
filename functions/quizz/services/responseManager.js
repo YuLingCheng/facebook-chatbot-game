@@ -3,10 +3,10 @@
 var get = function get(statusCode, message, event) {
   return {
     statusCode: statusCode,
-    body: JSON.stringify({
+    body: {
       message: message,
       input: event
-    })
+    }
   };
 };
 

@@ -1,23 +1,17 @@
 'use strict';
 
-var mongojs = require('mongojs');
-var db = mongojs(process.env.MONGO_URI);
-
-var findBySenderId = function findBySenderId(senderId, closeConnection) {
+var findBySenderId = function findBySenderId(db, senderId) {
   return new Promise(function (resolve, reject) {
     db.collection('records').find({ senderId: senderId }).sort({ score: 1 }).toArray(function (err, records) {
       if (err) {
         return reject(err);
-      }
-      if (closeConnection) {
-        // db.close();
       }
       return resolve(records);
     });
   });
 };
 
-var findLastBySenderId = function findLastBySenderId(senderId) {
+var findLastBySenderId = function findLastBySenderId(db, senderId) {
   return new Promise(function (resolve, reject) {
     db.collection('records').find({ senderId: senderId }).sort({ time: -1 }).limit(1).toArray(function (err, lastRecord) {
       if (err) {
@@ -28,38 +22,33 @@ var findLastBySenderId = function findLastBySenderId(senderId) {
   });
 };
 
-var insertOne = function insertOne(record) {
+var insertOne = function insertOne(db, record) {
   return new Promise(function (resolve, reject) {
     db.collection('records').insert(record, function (err) {
       if (err) {
         return reject(err);
       }
-      // db.close();
       return resolve();
     });
   });
 };
 
-var updateOne = function updateOne(senderId, personKey, time) {
+var updateOne = function updateOne(db, senderId, personKey, time) {
   return new Promise(function (resolve, reject) {
     db.collection('records').update({ senderId: senderId, key: personKey }, { $set: { time: time } }, function (err) {
       if (err) {
         return reject(err);
       }
-      // db.close();
       return resolve();
     });
   });
 };
 
-var increaseScoreBy = function increaseScoreBy(senderId, personKey, value, closeConnection) {
+var increaseScoreBy = function increaseScoreBy(db, senderId, personKey, value) {
   return new Promise(function (resolve, reject) {
     db.collection('records').update({ senderId: senderId, key: personKey }, { $inc: { score: value } }, function (err) {
       if (err) {
         return reject(err);
-      }
-      if (closeConnection) {
-        // db.close();
       }
       return resolve();
     });
