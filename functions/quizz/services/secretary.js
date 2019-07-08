@@ -1,5 +1,7 @@
+'use strict';
+
 module.exports = {
-  getImageMsg : function (url) {
+  getImageMsg: function getImageMsg(url) {
     return {
       attachment: {
         type: 'image',
@@ -10,7 +12,7 @@ module.exports = {
     };
   },
 
-  getMsgWithButtons: function (msg, buttons) {
+  getMsgWithButtons: function getMsgWithButtons(msg, buttons) {
     return {
       attachment: {
         type: 'template',
@@ -23,7 +25,7 @@ module.exports = {
     };
   },
 
-  getButton: function (label, action) {
+  getButton: function getButton(label, action) {
     return {
       type: 'postback',
       title: label,
@@ -31,7 +33,7 @@ module.exports = {
     };
   },
 
-  getQuickReply: function (label, action) {
+  getQuickReply: function getQuickReply(label, action) {
     return {
       content_type: 'text',
       title: label,
@@ -39,7 +41,7 @@ module.exports = {
     };
   },
 
-  getMsgWithHelpers: function (msg, helpers) {
+  getMsgWithHelpers: function getMsgWithHelpers(msg, helpers) {
     return {
       text: msg,
       quick_replies: helpers

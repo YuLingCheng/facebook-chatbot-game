@@ -16,21 +16,20 @@ You can change `provider.region` if you want to pick another data center.
 
 ## Deploy
 
-You can check that your function is ok with the following command
+You can check that your function is ok with the following command:
 ```
-serverless invoke local -f webhook
+sls invoke local -f webhook -p <path_to_file>.yml
 ```
 
-To deploy :
+To deploy:
 ```
-serverless deploy
+sls deploy
 ```
 
 ## TODO
 
-- Améliorer temps de réponse
-
-- S'assurer de l'ordre d'affichage des messages consécutifs envoyés ou modifier format des images pour regrouper en un seul message
+- Improve performance
+- Update people database automatically or at least more easily (than by hand)
 
 ## Command Helpers
 
